@@ -40,13 +40,14 @@ use windows::Win32::{
         Shell::{DefSubclassProc, SetWindowSubclass, ShellExecuteW},
         WindowsAndMessaging::{
             AppendMenuW, CreatePopupMenu, DestroyMenu, EnumWindows, GWL_STYLE, GetClientRect,
-            GetWindowLongW, GetWindowPlacement, GetWindowTextW, HTMAXBUTTON, MF_GRAYED,
-            MF_SEPARATOR, MF_STRING, NCCALCSIZE_PARAMS, PostMessageW, SW_MAXIMIZE, SW_RESTORE,
-            SW_SHOWNORMAL, SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER,
-            SetForegroundWindow, SetWindowLongW, SetWindowPos, ShowWindow, TPM_LEFTALIGN,
-            TPM_RETURNCMD, TPM_TOPALIGN, TrackPopupMenuEx, WINDOWPLACEMENT, WM_ACTIVATE, WM_APP,
-            WM_DPICHANGED, WM_HOTKEY, WM_NCCALCSIZE, WM_NCHITTEST, WM_NCLBUTTONDOWN,
-            WM_NCLBUTTONUP, WS_CAPTION, WS_MAXIMIZEBOX, WS_MINIMIZEBOX, WS_THICKFRAME,
+            GetWindowLongW, GetWindowPlacement, GetWindowTextW, HTMAXBUTTON, IsIconic, IsZoomed,
+            MF_GRAYED, MF_SEPARATOR, MF_STRING, NCCALCSIZE_PARAMS, PostMessageW, SC_RESTORE,
+            SW_MAXIMIZE, SW_RESTORE, SW_SHOWNORMAL, SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE,
+            SWP_NOSIZE, SWP_NOZORDER, SetForegroundWindow, SetWindowLongW, SetWindowPos, ShowWindow,
+            TPM_LEFTALIGN, TPM_RETURNCMD, TPM_TOPALIGN, TrackPopupMenuEx, WINDOWPLACEMENT,
+            WM_ACTIVATE, WM_APP, WM_DPICHANGED, WM_HOTKEY, WM_NCCALCSIZE, WM_NCHITTEST,
+            WM_NCLBUTTONDOWN, WM_NCLBUTTONUP, WM_SYSCOMMAND, WS_CAPTION, WS_MAXIMIZEBOX,
+            WS_MINIMIZEBOX, WS_THICKFRAME,
         },
     },
 };
@@ -225,13 +226,18 @@ unsafe extern "system" fn dispatcher(
         }
         WM_NCCALCSIZE => {
             if wparam.0 != 0 {
-                let mut wp = WINDOWPLACEMENT {
-                    length: std::mem::size_of::<WINDOWPLACEMENT>() as u32,
-                    ..Default::default()
+                let win_is_max = unsafe {
+                    IsZoomed(hwnd).as_bool()
+                        || {
+                            let mut wp = WINDOWPLACEMENT {
+                                length: std::mem::size_of::<WINDOWPLACEMENT>() as u32,
+                                ..Default::default()
+                            };
+                            GetWindowPlacement(hwnd, &mut wp).is_ok()
+                                && (wp.showCmd == SW_MAXIMIZE.0 as u32 || (wp.flags.0 & 2) != 0)
+                        }
                 };
-                if unsafe { GetWindowPlacement(hwnd, &mut wp).is_ok() }
-                    && wp.showCmd == SW_MAXIMIZE.0 as u32
-                {
+                if win_is_max {
                     let hmon = unsafe { MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST) };
                     let mut mi = MONITORINFO {
                         cbSize: std::mem::size_of::<MONITORINFO>() as u32,
@@ -264,6 +270,20 @@ unsafe extern "system" fn dispatcher(
                     unregister_app_hotkeys(hwnd);
                 }
             }
+            if active {
+                EVENT_PROXY.with(|p| {
+                    if let Some(ref proxy) = *p.borrow() {
+                        let _ = proxy.send_event(EventMessage::History);
+                    }
+                });
+            }
+        }
+        WM_SYSCOMMAND if (wparam.0 & 0xfff0) == SC_RESTORE as usize => {
+            EVENT_PROXY.with(|p| {
+                if let Some(ref proxy) = *p.borrow() {
+                    let _ = proxy.send_event(EventMessage::History);
+                }
+            });
         }
         _ if message == DISPATCH_MESSAGE => {
             if DISPATCHING.with(|running| running.replace(true)) {
@@ -545,6 +565,10 @@ pub fn show_main_menu(hwnd: isize, client_x: i32, client_y: i32) -> Option<crate
             _ => None,
         }
     }
+}
+
+pub fn is_window_minimized(hwnd: isize) -> bool {
+    unsafe { IsIconic(HWND(hwnd as *mut _)).as_bool() }
 }
 
 pub fn is_rect_visible_on_any_monitor(x: i32, y: i32, w: u32, h: u32) -> bool {

@@ -788,6 +788,25 @@ impl Browser {
             .window
             .inner_size()
             .to_logical::<f64>(self.window.scale_factor());
+
+        let is_min = native::is_window_minimized(self.window.hwnd())
+            || size.width < 50.0
+            || size.height < 50.0;
+
+        if is_min {
+            // When minimized, hide views to conserve GPU memory and avoid DirectComposition swapchain corruption
+            let _ = self.header.set_visible(false);
+            for tab in &self.tabs {
+                if let Some(view) = &tab.view {
+                    let _ = view.set_visible(false);
+                    if !tab.info.is_playing_audio {
+                        let _ = native::suspend_view(view);
+                    }
+                }
+            }
+            return Ok(());
+        }
+
         let is_internal = self.active_tab().is_some_and(|t| {
             [
                 SETTINGS, HISTORY, BOOKMARKS, DOWNLOADS, PASSWORDS, EXTENSIONS,
@@ -804,12 +823,15 @@ impl Browser {
         } else {
             self.header_height.max(base).min(size.height)
         };
+
         self.header
             .set_bounds(Rect {
                 position: LogicalPosition::new(0.0, 0.0).into(),
                 size: LogicalSize::new(size.width, height.max(1.0)).into(),
             })
             .map_err(|e| e.to_string())?;
+        let _ = self.header.set_visible(true);
+
         for tab in &self.tabs {
             if let Some(view) = &tab.view {
                 view.set_bounds(Rect {
@@ -1960,7 +1982,11 @@ fn startup() -> Result<(), String> {
                 ..
             } => Some(EventMessage::Command(Command::Close)),
             Event::WindowEvent {
-                event: WindowEvent::Resized(_) | WindowEvent::ScaleFactorChanged { .. },
+                event:
+                    WindowEvent::Resized(_)
+                    | WindowEvent::ScaleFactorChanged { .. }
+                    | WindowEvent::Focused(true)
+                    | WindowEvent::Moved(_),
                 ..
             } => Some(EventMessage::History),
             _ => None,
