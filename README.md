@@ -1,6 +1,6 @@
-# Papyrus 0.3.1
+# Papyrus 0.3.7
 
-Bản 0.3.1 thống nhất font các trang nội bộ sang Segoe UI/Tahoma/Arial để tránh chữ tiếng Việt dùng lẫn Georgia và Times New Roman. Chỉ thay đổi chữ của giao diện và tab mới, không ghi đè font do website lựa chọn.
+Bản 0.3.7 thống nhất font các trang nội bộ sang Segoe UI/Tahoma/Arial để tránh chữ tiếng Việt dùng lẫn Georgia và Times New Roman. Chỉ thay đổi chữ của giao diện và tab mới, không ghi đè font do website lựa chọn.
 
 Trình duyệt Windows với giao diện giấy, viết bằng Rust/Wry và dùng Microsoft Edge WebView2 (Chromium) để hiển thị website.
 
