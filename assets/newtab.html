@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tab mới</title>
+<style>
+  :root {
+    --bg: #faf6ed;
+    --card: #efe3ce;
+    --text: #2c1708;
+    --text-muted: #7d6b56;
+    --border: #d4c5a9;
+    --accent: #8c6941;
+    --input-bg: #ffffff;
+    --shadow: 0 4px 16px rgba(44,23,8,0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e2124;
+      --card: #282b30;
+      --text: #f2eee5;
+      --text-muted: #a0988a;
+      --border: #42454a;
+      --accent: #baa07a;
+      --input-bg: #2f3136;
+      --shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+  }
+  body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 85vh;
+    user-select: none;
+  }
+  .container {
+    width: 90%;
+    max-width: 640px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-title {
+    font-family: 'Georgia', serif;
+    font-size: 32px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+  }
+  .search-box {
+    width: 100%;
+    position: relative;
+    box-shadow: var(--shadow);
+    border-radius: 28px;
+    background: var(--input-bg);
+    border: 1.5px solid var(--border);
+    transition: all 0.2s ease;
+  }
+  .search-box:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 6px 20px rgba(140, 105, 65, 0.25);
+  }
+  .search-form {
+    display: flex;
+    align-items: center;
+    padding: 6px 16px;
+    height: 48px;
+    box-sizing: border-box;
+  }
+  .search-icon {
+    opacity: 0.6;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+  .search-input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    color: var(--text);
+    outline: none;
+    user-select: text;
+  }
+  .shortcuts {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    width: 100%;
+    max-width: 520px;
+    margin-top: 10px;
+  }
+  .shortcut {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s ease;
+  }
+  .shortcut:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+    border-color: var(--accent);
+  }
+  .shortcut-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .shortcut-icon img {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+  }
+  .footer {
+    margin-top: 28px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="brand">
+      <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="44" height="44" rx="10" fill="url(#prs_grad)" stroke="#8C6941" stroke-width="2.5"/>
+        <rect x="6" y="6" width="36" height="36" rx="7" stroke="#BAA07A" stroke-width="1.2" stroke-dasharray="2 1.5"/>
+        <text x="24" y="29" font-family="'Georgia', serif" font-size="16" font-weight="bold" fill="#2C1708" text-anchor="middle">PRS</text>
+        <defs>
+          <linearGradient id="prs_grad" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#FAF6ED"/>
+            <stop offset="100%" stop-color="#E5D6BA"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="brand-title">Papyrus</span>
+    </div>
+
+    <div class="search-box">
+      <form class="search-form" action="https://www.google.com/search" method="get">
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input class="search-input" type="search" name="q" placeholder="Tìm kiếm trên Google hoặc nhập địa chỉ web..." autocomplete="off" autofocus spellcheck="false">
+      </form>
+    </div>
+
+    <div class="shortcuts">
+      <a class="shortcut" href="https://www.youtube.com">
+        <div class="shortcut-icon" style="background:#ff000015;">
+          <img src="https://www.google.com/s2/favicons?domain=youtube.com&sz=64" alt="YouTube">
+        </div>
+        <span>YouTube</span>
+      </a>
+      <a class="shortcut" href="https://github.com">
+        <div class="shortcut-icon" style="background:#24292e15;">
+          <img src="https://www.google.com/s2/favicons?domain=github.com&sz=64" alt="GitHub">
+        </div>
+        <span>GitHub</span>
+      </a>
+      <a class="shortcut" href="https://www.facebook.com">
+        <div class="shortcut-icon" style="background:#1877f215;">
+          <img src="https://www.google.com/s2/favicons?domain=facebook.com&sz=64" alt="Facebook">
+        </div>
+        <span>Facebook</span>
+      </a>
+      <a class="shortcut" href="https://wikipedia.org">
+        <div class="shortcut-icon" style="background:#63646615;">
+          <img src="https://www.google.com/s2/favicons?domain=wikipedia.org&sz=64" alt="Wikipedia">
+        </div>
+        <span>Wikipedia</span>
+      </a>
+    </div>
+
+    <div class="footer">
+      Papyrus Browser · Nhân WebView2 Evergreen · Chống theo dõi &amp; Bảo mật
+    </div>
+  </div>
+</body>
+</html>

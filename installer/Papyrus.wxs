@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <!-- Dynamic preprocessor parameters with safe defaults for standalone WiX builds -->
+  <?ifndef Version?>
+    <?define Version = "0.3.7" ?>
+  <?endif?>
+  <?ifndef SourceDir?>
+    <?define SourceDir = ".." ?>
+  <?endif?>
+
+  <Product Id="*" 
+           Name="Papyrus Browser" 
+           Language="1033" 
+           Version="$(var.Version)" 
+           Manufacturer="Papyrus Project" 
+           UpgradeCode="5C917E2B-93BA-4D3C-8A5E-29BE3E219801">
+           
+    <Package InstallerVersion="500" 
+             Compressed="yes" 
+             InstallScope="perMachine" 
+             Platform="x64" 
+             Manufacturer="Papyrus Project"
+             Description="Papyrus Browser Installer - 100% Rust and WebView2" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Papyrus Browser is already installed." Schedule="afterInstallInitialize" AllowSameVersionUpgrades="yes" />
+    
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Application Icon -->
+    <Icon Id="PapyrusIcon.exe" SourceFile="$(var.SourceDir)\assets\papyrus.ico" />
+    <Property Id="ARPPRODUCTICON" Value="PapyrusIcon.exe" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/phucansolutions/papyrus" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/phucansolutions/papyrus" />
+
+    <!-- Check if WebView2 Runtime is installed (Machine or User) -->
+    <Property Id="WV2_MACHINE">
+      <RegistrySearch Id="WV2_Machine_Search"
+                      Root="HKLM"
+                      Key="SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
+                      Name="pv"
+                      Type="raw"
+                      Win64="yes" />
+    </Property>
+    <Property Id="WV2_USER">
+      <RegistrySearch Id="WV2_User_Search"
+                      Root="HKCU"
+                      Key="Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
+                      Name="pv"
+                      Type="raw" />
+    </Property>
+
+    <!-- Directory structure -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="Papyrus Browser" />
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Papyrus Browser" />
+      </Directory>
+      <Directory Id="DesktopFolder" Name="Desktop" />
+    </Directory>
+
+    <!-- Components -->
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="MainExecutable" Guid="8E39D3B5-F729-4A92-B706-9538BC7B8201" Win64="yes">
+        <File Id="PapyrusEXE" 
+              Source="$(var.SourceDir)\target\release\papyrus.exe" 
+              KeyPath="yes">
+          <!-- Start menu shortcut -->
+          <Shortcut Id="ApplicationStartMenuShortcut"
+                    Directory="ApplicationProgramsFolder"
+                    Name="Papyrus Browser"
+                    Description="Papyrus Browser - 100% Rust and WebView2"
+                    WorkingDirectory="INSTALLFOLDER"
+                    Icon="PapyrusIcon.exe"
+                    Advertise="no" />
+          <!-- Desktop shortcut -->
+          <Shortcut Id="ApplicationDesktopShortcut"
+                    Directory="DesktopFolder"
+                    Name="Papyrus Browser"
+                    Description="Papyrus Browser - 100% Rust and WebView2"
+                    WorkingDirectory="INSTALLFOLDER"
+                    Icon="PapyrusIcon.exe"
+                    Advertise="no" />
+        </File>
+      </Component>
+
+      <Component Id="AppIconComponent" Guid="D2A684C2-F02A-443B-A7FE-98B263C59402" Win64="yes">
+        <File Id="PapyrusICO" Source="$(var.SourceDir)\assets\papyrus.ico" KeyPath="yes" />
+      </Component>
+
+      <Component Id="WebView2InstallerComponent" Guid="F14A56E3-2C18-479D-A53E-816281749503" Win64="yes">
+        <File Id="WebView2BootstrapperEXE" 
+              Source="$(var.SourceDir)\installer\MicrosoftEdgeWebview2Setup.exe" 
+              KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Start Menu Directory Component -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcutComponent" Guid="A76F3218-19B8-43DE-8E3A-9F7C20182404">
+        <RemoveFolder Id="CleanUpShortCut" On="uninstall" />
+        <RegistryValue Root="HKCU" 
+                       Key="Software\PapyrusProject\PapyrusBrowser" 
+                       Name="installed" 
+                       Type="integer" 
+                       Value="1" 
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Custom Action: Run WebView2 Evergreen Bootstrapper if not detected -->
+    <CustomAction Id="InstallWebView2Runtime"
+                  FileKey="WebView2BootstrapperEXE"
+                  ExeCommand="/silent /install"
+                  Execute="deferred"
+                  Return="check"
+                  Impersonate="no" />
+
+    <InstallExecuteSequence>
+      <Custom Action="InstallWebView2Runtime" Before="InstallFinalize">
+        NOT Installed AND NOT WV2_MACHINE AND NOT WV2_USER
+      </Custom>
+    </InstallExecuteSequence>
+
+    <!-- Features -->
+    <Feature Id="Complete" Title="Papyrus Browser" Level="1">
+      <ComponentRef Id="MainExecutable" />
+      <ComponentRef Id="AppIconComponent" />
+      <ComponentRef Id="WebView2InstallerComponent" />
+      <ComponentRef Id="ApplicationShortcutComponent" />
+    </Feature>
+  </Product>
+</Wix>
